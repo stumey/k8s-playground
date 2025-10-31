@@ -8,6 +8,13 @@ keywords:
   - sample
   - playground
   - kubernetes
+  - nginx
+  - demo
 maintainers:
-  - name: Kubernetes Playground
-home: https://github.com/yourusername/k8s-playground
+  - name: Kubernetes Playground Team
+    email: playground@example.com
+home: https://github.com/k8s-playground/sample-app
+sources:
+  - https://github.com/k8s-playground/sample-app
+icon: https://raw.githubusercontent.com/kubernetes/kubernetes/master/logo/logo.png
+kubeVersion: ">=1.24.0"

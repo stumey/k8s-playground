@@ -4,7 +4,11 @@ metadata:
   name: sample-app
   namespace: default
   labels:
-    app: sample-app
+    app.kubernetes.io/name: sample-app
+    app.kubernetes.io/instance: sample-app
+    app.kubernetes.io/component: web
+    app.kubernetes.io/part-of: k8s-playground
+    app.kubernetes.io/managed-by: kubectl
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
