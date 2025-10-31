@@ -1,0 +1,2 @@
+# Istio configurations will be added here
+# Use istioctl to install Istio first, then add custom configs
