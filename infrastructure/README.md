@@ -4,6 +4,14 @@ This directory contains configurations and setup scripts for various Kubernetes 
 
 ## Available Tools
 
+### Ingress Controller
+
+- **Traefik**: Modern, cloud-native ingress controller and reverse proxy (auto-installed during cluster setup)
+
+### UI & Dashboard
+
+- **Headlamp**: Modern, extensible Kubernetes web UI for cluster management and exploration
+
 ### Monitoring
 
 - **Prometheus**: Metrics collection and alerting
@@ -30,13 +38,38 @@ Each tool has its own directory with installation instructions. Generally, you c
 
 ```bash
 # Using Make
-make install-prometheus
-make install-istio
-
-# Or using kubectl directly
-kubectl apply -f infrastructure/prometheus/
-kubectl apply -f infrastructure/istio/
+make install-traefik      # Ingress controller (auto-installed)
+make install-headlamp     # Kubernetes web UI
+make install-prometheus   # Monitoring stack
+make install-istio        # Service mesh
 ```
+
+### Traefik
+
+Traefik is automatically installed during cluster setup. To manually install:
+
+```bash
+make install-traefik
+```
+
+See `infrastructure/traefik/README.md` for detailed documentation.
+
+### Headlamp
+
+To install and access Headlamp:
+
+```bash
+# Install Headlamp
+make install-headlamp
+
+# Add to /etc/hosts
+echo "127.0.0.1 headlamp.local" | sudo tee -a /etc/hosts
+
+# Access at http://headlamp.local
+make headlamp
+```
+
+See `infrastructure/headlamp/README.md` for detailed documentation.
 
 ### Istio
 
@@ -79,6 +112,8 @@ kubectl port-forward -n monitoring svc/prometheus-grafana 3000:80
 ```
 infrastructure/
 ├── README.md
+├── traefik/            # Traefik ingress controller
+├── headlamp/           # Headlamp Kubernetes UI
 ├── istio/              # Istio service mesh configs
 ├── prometheus/         # Prometheus monitoring configs
 └── monitoring/         # General monitoring stack

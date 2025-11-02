@@ -1,0 +1,43 @@
+# Headlamp Helm Chart Values
+# These values override the default Headlamp Helm chart configuration
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 80
+
+# Resource limits for local development
+resources:
+  limits:
+    cpu: 200m
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+# Enable RBAC with cluster-admin for full cluster visibility
+rbac:
+  create: true
+  clusterRoleBinding:
+    create: true
+
+# Replica count
+replicaCount: 1
+
+# Configuration
+config:
+  # Allow access without authentication for local development
+  # WARNING: Only use for local development clusters!
+  baseURL: ""
+
+# Ingress configuration
+# Traefik automatically discovers and handles all ingresses
+ingress:
+  enabled: true
+  annotations: {}
+  hosts:
+    - host: headlamp.local
+      paths:
+        - path: /
+          type: Prefix
+  tls: []
