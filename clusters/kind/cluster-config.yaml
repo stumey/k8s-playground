@@ -6,6 +6,7 @@ name: playground
 nodes:
   # Control plane node
   - role: control-plane
+    image: kindest/node:v1.31.12
     kubeadmConfigPatches:
     - |
       kind: InitConfiguration
@@ -28,7 +29,9 @@ nodes:
 
   # Worker nodes for distributed workloads
   - role: worker
+    image: kindest/node:v1.31.12
   - role: worker
+    image: kindest/node:v1.31.12
 
 # Networking configuration
 networking:
@@ -40,9 +43,8 @@ networking:
   serviceSubnet: "10.96.0.0/12"
 
 # Feature gates for testing new Kubernetes features
-featureGates:
-  EphemeralContainers: true
-  PodSecurity: true
+# Note: EphemeralContainers and PodSecurity are GA in k8s 1.25+ and enabled by default
+# featureGates:
 
 # Runtime configuration
 containerdConfigPatches:
