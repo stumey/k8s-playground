@@ -1,0 +1,60 @@
+# Traefik Helm Chart Values
+# Optimized for Kind/local development
+
+# Deployment configuration
+deployment:
+  # Single replica for local dev
+  replicas: 1
+
+# Ports configuration for Kind
+ports:
+  web:
+    # HTTP port
+    port: 80
+    exposedPort: 80
+    # Expose on host (Kind control-plane)
+    hostPort: 80
+  websecure:
+    # HTTPS port
+    port: 443
+    exposedPort: 443
+    # Expose on host (Kind control-plane)
+    hostPort: 443
+
+# Service configuration
+service:
+  type: NodePort
+
+# Resource limits for local development
+resources:
+  limits:
+    cpu: 200m
+    memory: 128Mi
+  requests:
+    cpu: 100m
+    memory: 64Mi
+
+# Node selector to run on control-plane (which has port mappings in Kind)
+nodeSelector:
+  ingress-ready: "true"
+
+# Tolerations to allow running on control-plane
+tolerations:
+  - key: node-role.kubernetes.io/control-plane
+    operator: Exists
+    effect: NoSchedule
+  - key: node-role.kubernetes.io/master
+    operator: Exists
+    effect: NoSchedule
+
+# Enable dashboard for debugging (optional)
+ingressRoute:
+  dashboard:
+    enabled: false
+
+# Logs
+logs:
+  general:
+    level: INFO
+  access:
+    enabled: false

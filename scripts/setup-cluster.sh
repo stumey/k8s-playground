@@ -113,6 +113,28 @@ setup_metrics_server() {
     log_info "Metrics server installed."
 }
 
+setup_ingress_controller() {
+    log_info "Installing Traefik ingress controller..."
+
+    # Add Traefik Helm repository
+    helm repo add traefik https://traefik.github.io/charts 2>/dev/null || true
+    helm repo update traefik
+
+    # Install Traefik
+    helm install traefik traefik/traefik \
+        --namespace traefik \
+        --create-namespace \
+        --values "${PROJECT_ROOT}/infrastructure/traefik/values.yaml"
+
+    log_info "Waiting for Traefik to be ready..."
+    kubectl wait --namespace traefik \
+        --for=condition=ready pod \
+        --selector=app.kubernetes.io/name=traefik \
+        --timeout=90s
+
+    log_info "Traefik ingress controller installed and ready."
+}
+
 main() {
     log_info "Starting Kind cluster setup..."
     echo
@@ -122,11 +144,14 @@ main() {
     create_cluster
     verify_cluster
     setup_metrics_server
+    setup_ingress_controller
 
     echo
     log_info "✓ Cluster setup complete!"
     log_info "You can now use 'kubectl' to interact with your cluster."
     log_info "Run 'kubectl get nodes' to see your cluster nodes."
+    echo
+    log_info "To install Headlamp UI, run: make install-headlamp"
 }
 
 main "$@"

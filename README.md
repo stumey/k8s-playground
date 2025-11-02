@@ -37,7 +37,7 @@ kubectl port-forward svc/sample-app 8080:80
 ```
 ├── apps/              # Application deployments
 ├── clusters/kind/     # Kind cluster configuration
-├── infrastructure/    # Istio, Prometheus, monitoring configs
+├── infrastructure/    # Traefik, Istio, Prometheus, Headlamp configs
 ├── scripts/           # Automation scripts
 └── Makefile          # Common operations
 ```
@@ -45,13 +45,39 @@ kubectl port-forward svc/sample-app 8080:80
 ## Common Commands
 
 ```bash
-make setup              # Create cluster
+make setup              # Create cluster with Traefik ingress
 make teardown           # Delete cluster
 make status             # Check cluster status
 make deploy-sample      # Deploy sample application
+make install-traefik    # Install Traefik ingress (auto-installed during setup)
 make install-istio      # Install Istio
 make install-prometheus # Install Prometheus
+make install-headlamp   # Install Headlamp UI
+make headlamp           # Open Headlamp in browser
 ```
+
+## Headlamp UI
+
+Access your cluster through a modern web interface:
+
+```bash
+# Install Headlamp
+make install-headlamp
+
+# Add to /etc/hosts
+echo "127.0.0.1 headlamp.local" | sudo tee -a /etc/hosts
+
+# Open in browser
+make headlamp
+# Or visit: http://headlamp.local
+```
+
+Headlamp provides:
+- Visual resource explorer
+- Real-time cluster monitoring
+- YAML editor
+- Pod logs and shell access
+- Resource metrics and graphs
 
 ## Cleanup
 

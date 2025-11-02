@@ -9,10 +9,7 @@ metadata:
     app.kubernetes.io/component: web
     app.kubernetes.io/part-of: k8s-playground
     app.kubernetes.io/managed-by: kubectl
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
-  ingressClassName: nginx
   rules:
   - host: sample-app.local
     http:

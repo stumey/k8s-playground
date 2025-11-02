@@ -1,6 +1,7 @@
 .PHONY: help setup teardown clean install-tools cluster-info deploy-sample \
-        install-istio install-prometheus install-monitoring status logs \
-        port-forward test validate
+        install-istio install-prometheus install-monitoring install-headlamp \
+        install-traefik uninstall-traefik uninstall-headlamp \
+        status logs port-forward test validate headlamp
 
 # Configuration
 CLUSTER_NAME := playground
@@ -69,6 +70,21 @@ delete-sample: ## Delete the sample application
 
 ##@ Infrastructure Tools
 
+install-traefik: ## Install Traefik ingress controller
+	@echo "$(GREEN)Installing Traefik...$(RESET)"
+	@helm repo list | grep -q traefik || helm repo add traefik https://traefik.github.io/charts
+	@helm repo update
+	@helm upgrade --install traefik traefik/traefik \
+		--namespace traefik \
+		--create-namespace \
+		--values infrastructure/traefik/values.yaml
+	@echo "$(GREEN)Traefik installed!$(RESET)"
+
+uninstall-traefik: ## Uninstall Traefik
+	@echo "$(YELLOW)Uninstalling Traefik...$(RESET)"
+	@helm uninstall traefik -n traefik || true
+	@kubectl delete namespace traefik --ignore-not-found=true
+
 install-istio: ## Install Istio service mesh
 	@echo "$(GREEN)Installing Istio...$(RESET)"
 	@kubectl apply -f infrastructure/istio/
@@ -80,6 +96,26 @@ install-prometheus: ## Install Prometheus monitoring stack
 install-monitoring: ## Install complete monitoring stack
 	@echo "$(GREEN)Installing monitoring stack...$(RESET)"
 	@kubectl apply -f infrastructure/monitoring/
+
+install-headlamp: ## Install Headlamp Kubernetes UI
+	@echo "$(GREEN)Installing Headlamp...$(RESET)"
+	@helm repo list | grep -q headlamp || helm repo add headlamp https://kubernetes-sigs.github.io/headlamp/
+	@helm repo update
+	@helm upgrade --install headlamp headlamp/headlamp \
+		--namespace headlamp \
+		--create-namespace \
+		--values infrastructure/headlamp/values.yaml
+	@echo "$(GREEN)Headlamp installed!$(RESET)"
+	@echo ""
+	@echo "$(YELLOW)Add this entry to /etc/hosts:$(RESET)"
+	@echo "  127.0.0.1 headlamp.local"
+	@echo ""
+	@echo "$(GREEN)Access Headlamp at: http://headlamp.local$(RESET)"
+
+uninstall-headlamp: ## Uninstall Headlamp
+	@echo "$(YELLOW)Uninstalling Headlamp...$(RESET)"
+	@helm uninstall headlamp -n headlamp || true
+	@kubectl delete namespace headlamp --ignore-not-found=true
 
 ##@ Development
 
@@ -106,6 +142,12 @@ watch: ## Watch all resources in the cluster
 
 k9s: ## Launch k9s terminal UI
 	@k9s
+
+headlamp: ## Open Headlamp in browser (requires /etc/hosts entry)
+	@echo "$(GREEN)Opening Headlamp UI...$(RESET)"
+	@echo "If Headlamp doesn't open, ensure you have added to /etc/hosts:"
+	@echo "  127.0.0.1 headlamp.local"
+	@open http://headlamp.local 2>/dev/null || xdg-open http://headlamp.local 2>/dev/null || echo "Please open http://headlamp.local in your browser"
 
 ctx: ## Show current Kubernetes context
 	@kubectl config current-context
