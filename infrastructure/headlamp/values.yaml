@@ -29,6 +29,10 @@ config:
   # Allow access without authentication for local development
   # WARNING: Only use for local development clusters!
   baseURL: ""
+  # Enable dynamic clusters for easier local development
+  # This allows adding cluster configs in the frontend
+  extraArgs:
+    - "-enable-dynamic-clusters"
 
 # Ingress configuration
 # Traefik automatically discovers and handles all ingresses

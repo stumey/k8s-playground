@@ -149,6 +149,15 @@ headlamp: ## Open Headlamp in browser (requires /etc/hosts entry)
 	@echo "  127.0.0.1 headlamp.local"
 	@open http://headlamp.local 2>/dev/null || xdg-open http://headlamp.local 2>/dev/null || echo "Please open http://headlamp.local in your browser"
 
+headlamp-token: ## Generate and copy Headlamp authentication token to clipboard
+	@echo "$(GREEN)Generating Headlamp authentication token...$(RESET)"
+	@TOKEN=$$(kubectl create token headlamp --namespace headlamp --duration=87600h); \
+	echo "$$TOKEN"; \
+	echo "$$TOKEN" | pbcopy 2>/dev/null || echo "$$TOKEN" | xclip -selection clipboard 2>/dev/null || true
+	@echo ""
+	@echo "$(GREEN)Token displayed above and copied to clipboard (if pbcopy/xclip available)$(RESET)"
+	@echo "$(YELLOW)Paste it into the Headlamp authentication page at http://headlamp.local$(RESET)"
+
 ctx: ## Show current Kubernetes context
 	@kubectl config current-context
 
