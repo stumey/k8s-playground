@@ -1,0 +1,77 @@
+# RabbitMQ Helm Chart Values
+# Optimized for Kind/local development
+
+# Authentication
+auth:
+  username: admin
+  password: rabbitmq-password
+  erlangCookie: secretcookie
+
+# Deployment configuration
+replicaCount: 1
+
+# Resource limits for local development
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 200m
+    memory: 256Mi
+
+# Service configuration
+service:
+  type: ClusterIP
+  ports:
+    amqp: 5672
+    epmd: 4369
+    dist: 25672
+    manager: 15672
+    metrics: 9419
+
+# Enable management plugin for UI and API access
+# Management UI will be available at http://rabbitmq.local
+plugins: "rabbitmq_management rabbitmq_prometheus"
+
+# Persistence disabled for local development
+persistence:
+  enabled: false
+
+# Community plugins to enable
+communityPlugins: ""
+
+# Metrics configuration for Prometheus
+metrics:
+  enabled: true
+  serviceMonitor:
+    enabled: false
+
+# Resource configurations
+extraConfiguration: |-
+  # Default vhost
+  default_vhost = /
+  # Default user tags
+  default_user_tags.administrator = true
+  # Disk free limit (for local dev)
+  disk_free_limit.absolute = 1GB
+  # Memory high watermark
+  vm_memory_high_watermark.relative = 0.6
+
+# Load definitions (optional - for pre-configuring exchanges, queues, etc.)
+loadDefinition:
+  enabled: false
+
+# Clustering disabled for single replica
+clustering:
+  enabled: false
+
+# Ingress configuration (for management UI)
+ingress:
+  enabled: true
+  ingressClassName: traefik
+  hostname: rabbitmq.local
+  path: /
+  pathType: Prefix
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+  tls: false

@@ -1,7 +1,7 @@
 .PHONY: help setup teardown clean install-tools cluster-info deploy-sample \
         install-istio install-prometheus install-monitoring install-headlamp \
-        install-traefik uninstall-traefik uninstall-headlamp \
-        status logs port-forward test validate headlamp
+        install-traefik uninstall-traefik uninstall-headlamp install-rabbitmq \
+        uninstall-rabbitmq status logs port-forward test validate headlamp
 
 # Configuration
 CLUSTER_NAME := playground
@@ -116,6 +116,29 @@ uninstall-headlamp: ## Uninstall Headlamp
 	@echo "$(YELLOW)Uninstalling Headlamp...$(RESET)"
 	@helm uninstall headlamp -n headlamp || true
 	@kubectl delete namespace headlamp --ignore-not-found=true
+
+install-rabbitmq: ## Install RabbitMQ message broker
+	@echo "$(GREEN)Installing RabbitMQ...$(RESET)"
+	@kubectl apply -f infrastructure/rabbitmq/rabbitmq-cluster.yaml
+	@echo "$(GREEN)RabbitMQ cluster manifest applied!$(RESET)"
+	@echo ""
+	@echo "$(YELLOW)Waiting for RabbitMQ pods to be ready...$(RESET)"
+	@kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=rabbitmq -n rabbitmq --timeout=300s || true
+	@echo ""
+	@echo "$(YELLOW)Add this entry to /etc/hosts:$(RESET)"
+	@echo "  127.0.0.1 rabbitmq.local"
+	@echo ""
+	@echo "$(GREEN)RabbitMQ Connection Details:$(RESET)"
+	@echo "  AMQP URL: amqp://admin:rabbitmq-password@rabbitmq.rabbitmq.svc.cluster.local:5672/"
+	@echo "  Management UI: http://rabbitmq.local (username: admin, password: rabbitmq-password)"
+	@echo ""
+	@echo "$(GREEN)From within cluster, use:$(RESET)"
+	@echo "  Host: rabbitmq.rabbitmq.svc.cluster.local"
+	@echo "  Port: 5672"
+
+uninstall-rabbitmq: ## Uninstall RabbitMQ
+	@echo "$(YELLOW)Uninstalling RabbitMQ...$(RESET)"
+	@kubectl delete -f infrastructure/rabbitmq/rabbitmq-cluster.yaml --ignore-not-found=true
 
 ##@ Development
 
