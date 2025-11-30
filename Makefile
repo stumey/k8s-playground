@@ -1,7 +1,8 @@
 .PHONY: help setup teardown clean install-tools cluster-info deploy-sample \
         install-istio install-prometheus install-monitoring install-headlamp \
         install-traefik uninstall-traefik uninstall-headlamp install-rabbitmq \
-        uninstall-rabbitmq status logs port-forward test validate headlamp
+        uninstall-rabbitmq status logs port-forward test validate headlamp \
+        deploy-external build-external cleanup-external
 
 # Configuration
 CLUSTER_NAME := playground
@@ -67,6 +68,27 @@ deploy-sample: ## Deploy the sample application
 delete-sample: ## Delete the sample application
 	@echo "$(YELLOW)Deleting sample application...$(RESET)"
 	@kubectl delete -f apps/sample-app/k8s/manifests/ --ignore-not-found=true
+
+deploy-external: ## Deploy external app (usage: make deploy-external APP_PATH=~/path/to/app [APP_NAME=myapp])
+	@if [ -z "$(APP_PATH)" ]; then \
+		echo "$(YELLOW)Usage: make deploy-external APP_PATH=~/path/to/app [APP_NAME=myapp]$(RESET)"; \
+		exit 1; \
+	fi
+	@./scripts/deploy-external-app.sh $(APP_PATH) $(APP_NAME)
+
+build-external: ## Build and load external app image only (usage: make build-external APP_PATH=~/path/to/app)
+	@if [ -z "$(APP_PATH)" ]; then \
+		echo "$(YELLOW)Usage: make build-external APP_PATH=~/path/to/app [APP_NAME=myapp]$(RESET)"; \
+		exit 1; \
+	fi
+	@./scripts/deploy-external-app.sh $(APP_PATH) $(APP_NAME) --build-only
+
+cleanup-external: ## Remove external app deployment (usage: make cleanup-external APP_PATH=~/path/to/app)
+	@if [ -z "$(APP_PATH)" ]; then \
+		echo "$(YELLOW)Usage: make cleanup-external APP_PATH=~/path/to/app [APP_NAME=myapp]$(RESET)"; \
+		exit 1; \
+	fi
+	@./scripts/deploy-external-app.sh $(APP_PATH) $(APP_NAME) --cleanup
 
 ##@ Infrastructure Tools
 

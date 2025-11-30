@@ -1,0 +1,12 @@
+.git
+.gitignore
+README.md
+helm/
+k8s/
+skaffold.yaml
+.dockerignore
+Dockerfile
+*.md
+.env
+.env.*
+vendor/

@@ -1,0 +1,66 @@
+# Drop-in Skaffold config for Helm-based deployments
+# Copy this to your project root as skaffold.yaml
+# Customize the image name, chart path, and sync patterns
+
+apiVersion: skaffold/v4beta11
+kind: Config
+metadata:
+  name: my-app  # Change to your app name
+
+build:
+  artifacts:
+    - image: my-app  # Change to your app name
+      docker:
+        dockerfile: Dockerfile
+  tagPolicy:
+    gitCommit: {}
+  local:
+    push: false
+    useBuildkit: true
+
+deploy:
+  helm:
+    releases:
+      - name: my-app  # Change to your app name
+        chartPath: helm  # Adjust if your chart is elsewhere
+        valuesFiles:
+          - helm/values-local.yaml  # Or values.yaml
+        setValueTemplates:
+          image.repository: my-app  # Change to your app name
+          image.tag: "{{.IMAGE_TAG}}"
+          image.pullPolicy: IfNotPresent
+        createNamespace: false
+
+portForward:
+  - resourceType: service
+    resourceName: my-app  # Change to your app name
+    port: 80
+    localPort: 8080  # Adjust to your preferred local port
+
+profiles:
+  # Debug profile with file sync for hot reload
+  - name: debug
+    build:
+      artifacts:
+        - image: my-app
+          docker:
+            dockerfile: Dockerfile
+          sync:
+            manual:
+              # Adjust these patterns for your language:
+              # Node.js: src/**/*.js
+              # .NET: **/*.cs
+              # Go: **/*.go
+              - src: "src/**/*"
+                dest: /app/src
+    deploy:
+      helm:
+        releases:
+          - name: my-app
+            chartPath: helm
+            valuesFiles:
+              - helm/values-local.yaml
+            setValueTemplates:
+              image.repository: my-app
+              image.tag: "{{.IMAGE_TAG}}"
+              image.pullPolicy: IfNotPresent

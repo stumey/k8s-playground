@@ -135,6 +135,17 @@ setup_ingress_controller() {
     log_info "Traefik ingress controller installed and ready."
 }
 
+setup_storage_provisioner() {
+    log_step "Setting up local storage provisioner..."
+
+    # Kind includes local-path-provisioner by default, just set it as default
+    kubectl patch storageclass standard -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}' 2>/dev/null || \
+    kubectl patch storageclass local-path -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}' 2>/dev/null || \
+    log_warn "Could not set default storage class (may already be set)"
+
+    log_info "Local storage provisioner configured."
+}
+
 main() {
     log_info "Starting Kind cluster setup..."
     echo
@@ -145,6 +156,7 @@ main() {
     verify_cluster
     setup_metrics_server
     setup_ingress_controller
+    setup_storage_provisioner
 
     echo
     log_info "✓ Cluster setup complete!"

@@ -1,0 +1,17 @@
+node_modules
+npm-debug.log
+.git
+.gitignore
+README.md
+helm/
+k8s/
+skaffold.yaml
+.dockerignore
+Dockerfile
+*.md
+.env
+.env.*
+coverage/
+.nyc_output/
+dist/
+build/

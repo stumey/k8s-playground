@@ -1,0 +1,66 @@
+apiVersion: skaffold/v4beta11
+kind: Config
+metadata:
+  name: ${APP_NAME}
+
+build:
+  artifacts:
+    - image: ${APP_NAME}
+      docker:
+        dockerfile: Dockerfile
+  tagPolicy:
+    gitCommit: {}
+  local:
+    push: false
+    useBuildkit: true
+
+deploy:
+  helm:
+    releases:
+      - name: ${APP_NAME}
+        chartPath: helm
+        valuesFiles:
+          - helm/values-local.yaml
+        setValueTemplates:
+          image.tag: "{{.IMAGE_TAG}}"
+        createNamespace: false
+
+portForward:
+  - resourceType: service
+    resourceName: ${APP_NAME}
+    port: 80
+    localPort: ${LOCAL_PORT}
+
+profiles:
+  # Production profile (cloud deployment)
+  - name: prod
+    deploy:
+      helm:
+        releases:
+          - name: ${APP_NAME}
+            chartPath: helm
+            valuesFiles:
+              - helm/values.yaml
+            setValueTemplates:
+              image.tag: "{{.IMAGE_TAG}}"
+
+  # Debug profile with file sync for hot reload
+  - name: debug
+    build:
+      artifacts:
+        - image: ${APP_NAME}
+          docker:
+            dockerfile: Dockerfile
+          sync:
+            manual:
+              - src: "${SYNC_PATTERN}"
+                dest: ${SYNC_DEST}
+    deploy:
+      helm:
+        releases:
+          - name: ${APP_NAME}
+            chartPath: helm
+            valuesFiles:
+              - helm/values-local.yaml
+            setValueTemplates:
+              image.tag: "{{.IMAGE_TAG}}"

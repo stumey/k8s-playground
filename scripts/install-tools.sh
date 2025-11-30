@@ -159,12 +159,44 @@ install_k9s() {
     log_info "k9s installation attempted."
 }
 
+install_skaffold() {
+    if command -v skaffold &> /dev/null; then
+        log_info "skaffold is already installed ($(skaffold version))"
+        return 0
+    fi
+
+    log_step "Installing Skaffold (continuous development tool)..."
+
+    local os=$(detect_os)
+    local arch=$(detect_arch)
+
+    if [ "$os" = "darwin" ]; then
+        if command -v brew &> /dev/null; then
+            brew install skaffold
+        else
+            log_warn "Homebrew not found. Installing via curl..."
+            curl -Lo skaffold "https://storage.googleapis.com/skaffold/releases/latest/skaffold-${os}-${arch}"
+            chmod +x skaffold
+            sudo mv skaffold /usr/local/bin
+        fi
+    elif [ "$os" = "linux" ]; then
+        curl -Lo skaffold "https://storage.googleapis.com/skaffold/releases/latest/skaffold-${os}-${arch}"
+        chmod +x skaffold
+        sudo mv skaffold /usr/local/bin
+    else
+        log_error "Unsupported operating system."
+        return 1
+    fi
+
+    log_info "skaffold installed successfully."
+}
+
 show_summary() {
     echo
     log_info "=== Installation Summary ==="
     echo
 
-    local tools=("kubectl" "kind" "helm" "k9s" "docker")
+    local tools=("kubectl" "kind" "helm" "k9s" "skaffold" "docker")
 
     for tool in "${tools[@]}"; do
         if command -v "$tool" &> /dev/null; then
@@ -187,6 +219,7 @@ main() {
     install_kind
     install_helm
     install_k9s
+    install_skaffold
 
     show_summary
 

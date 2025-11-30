@@ -1,0 +1,43 @@
+var builder = WebApplication.CreateBuilder(args);
+
+// Configure Kestrel to listen on port 8080
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenAnyIP(8080);
+});
+
+// Add health checks
+builder.Services.AddHealthChecks();
+
+var app = builder.Build();
+
+var environment = Environment.GetEnvironmentVariable("ENVIRONMENT") ?? "production";
+var logLevel = Environment.GetEnvironmentVariable("LOG_LEVEL") ?? "Information";
+
+// Configure logging
+builder.Logging.SetMinimumLevel(
+    logLevel.ToLower() == "debug" ? LogLevel.Debug : LogLevel.Information
+);
+
+// Map health endpoints
+app.MapHealthChecks("/health");
+app.MapHealthChecks("/ready");
+
+// Map root endpoint
+app.MapGet("/", () => new
+{
+    message = "Hello from k8s-playground!",
+    environment = environment,
+    version = "1.0.0"
+});
+
+// Graceful shutdown
+var lifetime = app.Services.GetRequiredService<IHostApplicationLifetime>();
+lifetime.ApplicationStopping.Register(() =>
+{
+    app.Logger.LogInformation("Application is shutting down gracefully");
+});
+
+app.Logger.LogInformation("Starting server on port 8080 in {Environment} mode", environment);
+
+app.Run();

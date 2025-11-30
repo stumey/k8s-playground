@@ -1,0 +1,32 @@
+# Drop-in Skaffold config for raw Kubernetes manifests
+# Copy this to your project root as skaffold.yaml
+# Works with k8s/ or manifests/ directory
+
+apiVersion: skaffold/v4beta11
+kind: Config
+metadata:
+  name: my-app  # Change to your app name
+
+build:
+  artifacts:
+    - image: my-app  # Change to your app name
+      docker:
+        dockerfile: Dockerfile
+  tagPolicy:
+    gitCommit: {}
+  local:
+    push: false
+    useBuildkit: true
+
+manifests:
+  rawYaml:
+    - k8s/*.yaml  # Adjust path to your manifests
+
+deploy:
+  kubectl: {}
+
+portForward:
+  - resourceType: service
+    resourceName: my-app  # Change to match your service name
+    port: 80
+    localPort: 8080

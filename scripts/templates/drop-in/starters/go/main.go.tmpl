@@ -1,0 +1,118 @@
+package main
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+)
+
+type Response struct {
+	Message     string `json:"message,omitempty"`
+	Environment string `json:"environment,omitempty"`
+	Version     string `json:"version,omitempty"`
+	Status      string `json:"status,omitempty"`
+	Error       string `json:"error,omitempty"`
+}
+
+var (
+	environment = getEnv("ENVIRONMENT", "production")
+	logLevel    = getEnv("LOG_LEVEL", "info")
+)
+
+func getEnv(key, defaultValue string) string {
+	value := os.Getenv(key)
+	if value == "" {
+		return defaultValue
+	}
+	return value
+}
+
+func logInfo(format string, v ...interface{}) {
+	log.Printf("[INFO] "+format, v...)
+}
+
+func logDebug(format string, v ...interface{}) {
+	if logLevel == "debug" {
+		log.Printf("[DEBUG] "+format, v...)
+	}
+}
+
+func healthHandler(w http.ResponseWriter, r *http.Request) {
+	logDebug("Health check requested")
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(Response{
+		Status:      "ok",
+		Environment: environment,
+	})
+}
+
+func readyHandler(w http.ResponseWriter, r *http.Request) {
+	logDebug("Readiness check requested")
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(Response{
+		Status:      "ready",
+		Environment: environment,
+	})
+}
+
+func rootHandler(w http.ResponseWriter, r *http.Request) {
+	logDebug("Root endpoint requested")
+	if r.URL.Path != "/" {
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(Response{
+			Error: "Not found",
+		})
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(Response{
+		Message:     "Hello from k8s-playground!",
+		Environment: environment,
+		Version:     "1.0.0",
+	})
+}
+
+func main() {
+	port := getEnv("PORT", "8080")
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/health", healthHandler)
+	mux.HandleFunc("/ready", readyHandler)
+	mux.HandleFunc("/", rootHandler)
+
+	srv := &http.Server{
+		Addr:    fmt.Sprintf(":%s", port),
+		Handler: mux,
+	}
+
+	// Start server in a goroutine
+	go func() {
+		logInfo("Starting server on port %s in %s mode", port, environment)
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("Server failed to start: %v", err)
+		}
+	}()
+
+	// Wait for interrupt signal for graceful shutdown
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	logInfo("Shutting down server gracefully...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Fatalf("Server forced to shutdown: %v", err)
+	}
+
+	logInfo("Server stopped")
+}
